@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using TCSA.WebAPI.FlightData.Models;
 
 namespace TCSA.WebAPI.FlightData.Data;
 
@@ -8,4 +9,6 @@ public class FlightsDbContext : DbContext
     {
 
     }
+
+    public DbSet<Flight> Flights { get; set; }
 }
