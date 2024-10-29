@@ -19,7 +19,14 @@ public class FlightsController(IFlightService flightService) : Controller
     [HttpGet("{id}")]
     public ActionResult<Flight> GetFlightById(int id)
     {
-        return Ok(_flightService.GetFlightById(id));
+        var result = _flightService.GetFlightById(id);
+
+        if (result == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(result);
     }
 
     [HttpPost]
@@ -31,12 +38,26 @@ public class FlightsController(IFlightService flightService) : Controller
     [HttpPut]
     public ActionResult<Flight> UpdateFlight(Flight flight)
     {
-        return Ok(_flightService.Updateflight(flight));
+        var result = _flightService.GetFlightById(flight.Id);
+
+        if (result == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(result);
     }
 
     [HttpPut("{id}")]
     public ActionResult<Flight> DeleteFlight(int id)
     {
-        return Ok(_flightService.DeleteFlight(id));
+        var result = _flightService.GetFlightById(id);
+
+        if (result == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(result);
     }
 }
