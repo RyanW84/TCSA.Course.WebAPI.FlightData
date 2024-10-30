@@ -48,7 +48,7 @@ public class FlightsController(IFlightService flightService) : Controller
         return Ok(result);
     }
 
-    [HttpPut("{id}")]
+    [HttpDelete("{id}")]
     public ActionResult<Flight> DeleteFlight(int id)
     {
         var result = _flightService.GetFlightById(id);
