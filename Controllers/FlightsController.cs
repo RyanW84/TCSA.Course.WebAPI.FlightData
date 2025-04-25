@@ -3,10 +3,10 @@ using TCSA.WebAPI.FlightData.Models;
 using TCSA.WebAPI.FlightData.Services;
 
 namespace TCSA.WebAPI.FlightData.Controllers;
-
+[ApiController]
 [Route("api/[controller]")]
 //Example: http:localhost:5609/api/flights
-public class FlightsController(IFlightService flightService) : Controller
+public class FlightsController(IFlightService flightService) : ControllerBase
 {
     private readonly IFlightService _flightService = flightService;
 
