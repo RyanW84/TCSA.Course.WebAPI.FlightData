@@ -2,20 +2,17 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TCSA.WebAPI.FlightData.Data;
 
 #nullable disable
 
-namespace TCSA.WebAPI.FlightData.Migrations
+namespace TCSA.WebAPI.FlightData.Data.Migrations
 {
     [DbContext(typeof(FlightsDbContext))]
-    [Migration("20241027111757_initial")]
-    partial class initial
+    partial class FlightsDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.5");
