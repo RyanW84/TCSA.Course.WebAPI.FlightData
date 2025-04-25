@@ -11,7 +11,7 @@ using TCSA.WebAPI.FlightData.Data;
 namespace TCSA.WebAPI.FlightData.Data.Migrations
 {
     [DbContext(typeof(FlightsDbContext))]
-    [Migration("20250423210313_InitialCreate")]
+    [Migration("20250425195509_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

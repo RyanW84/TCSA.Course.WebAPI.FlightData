@@ -1,7 +1,10 @@
-﻿namespace TCSA.WebAPI.FlightData.Models;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace TCSA.WebAPI.FlightData.Models;
 
 public class Flight
 {
+    [Key]
     public int Id { get; set; }
     public int FlightNumber { get; set; }
     public string AirlineName { get; set; } = string.Empty;
