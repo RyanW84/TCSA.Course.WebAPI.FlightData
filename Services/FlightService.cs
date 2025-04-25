@@ -3,67 +3,70 @@ using TCSA.WebAPI.FlightData.Models;
 
 namespace TCSA.WebAPI.FlightData.Services;
 
-public interface IFlightService
-{
-    public List<Flight> GetFlights();
-    public Flight? GetFlightById(int id);
-    public Flight Createflight(Flight flight);
-    public Flight Updateflight(Flight flight);
-    public string? DeleteFlight(int id);
-}
-
 public class FlightService : IFlightService
 {
-    private readonly FlightsDbContext Context;
+    private readonly FlightsDbContext _dbContext;
 
     public FlightService(FlightsDbContext context)
     {
-        Context = context;
+        this._dbContext = context;
     }
-
-    public Flight Createflight(Flight flight)
+    public async Task<Flight> Createflight(Flight flight)
     {
-        var savedFlight = Context.Flights.Add(flight);
-        Context.SaveChanges();
+        var savedFlight = await _dbContext.Flights.AddAsync(flight);
+        await _dbContext.SaveChangesAsync();
         return savedFlight.Entity;
     }
 
-    public string? DeleteFlight(int id)
+    public async Task<string?> DeleteFlight(int id)
     {
-        Flight savedFlight = Context.Flights.Find(id);
+        Flight? savedFlight = await _dbContext.Flights.FindAsync(id);
 
         if (savedFlight == null)
         {
             return null;
         }
 
-        Context.Flights.Remove(savedFlight);
+        _dbContext.Flights.Remove(savedFlight);
+
+        await _dbContext.SaveChangesAsync();
 
         return $"Successfully deleted flight with id: {id}";
     }
-
-    public Flight? GetFlightById(int id)
+    public async List<List<Flight>> GetAllFlights()
     {
-        Flight savedFlight = Context.Flights.Find(id);
-        return savedFlight == null ? null : savedFlight;
+        return await _dbContext.Flights.FindAsync();
     }
-
-    public List<Flight> GetFlights()
+    public async Task<Flight?> GetFlightById(int id)
     {
-        return Context.Flights.ToList();
+        var result = await _dbContext.Flights.FindAsync(id);
+
+        if (result is null)
+        {
+            return null;
+        }
+        return result;
     }
-
-    public Flight Updateflight(Flight flight)
+    
+    public async Task<Flight?> Updateflight(int id, Flight updatedFlight)
     {
-        Flight savedFlight = Context.Flights.Find(flight.Id);
+        Flight? savedFlight = await _dbContext.Flights.FindAsync(id);
 
-        if (savedFlight == null)
+        if (savedFlight is null)
         {
             return null;
         }
 
-        Context.Entry(savedFlight).CurrentValues.SetValues(flight);
-        Context.SaveChanges();
+        savedFlight.Id = updatedFlight.Id;
+        savedFlight.FlightNumber = updatedFlight.FlightNumber;
+        savedFlight.AirlineName = updatedFlight.AirlineName;
+        savedFlight.DepartureAirportCode = updatedFlight.DepartureAirportCode;
+        savedFlight.ArrivalAirportCode = updatedFlight.ArrivalAirportCode;
+        savedFlight.DepartureDateTime = updatedFlight.DepartureDateTime;
+        savedFlight.ArrivalDateTime = updatedFlight.ArrivalDateTime;
+        savedFlight.PassengerCapacity = updatedFlight.PassengerCapacity;
+
+        await _dbContext.SaveChangesAsync();
 
         return savedFlight;
     }

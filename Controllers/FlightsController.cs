@@ -11,15 +11,17 @@ public class FlightsController(IFlightService flightService) : ControllerBase
     private readonly IFlightService _flightService = flightService;
 
     [HttpGet]
-    public ActionResult<List<Flight>> GetAllFlights()
+    public async Task<ActionResult<List<Flight>>> GetAllFlights()
     {
-        return Ok(_flightService.GetFlights());
+        var flights = await _flightService.GetAllFlights();
+
+        return Ok(flights);
     }
 
     [HttpGet("{id}")]
-    public ActionResult<Flight> GetFlightById(int id)
+    public async Task<ActionResult<Flight>> GetFlightById(int id)
     {
-        var result = _flightService.GetFlightById(id);
+        var result = await _flightService.GetFlightById(id);
 
         if (result == null)
         {
@@ -30,9 +32,12 @@ public class FlightsController(IFlightService flightService) : ControllerBase
     }
 
     [HttpPost]
-    public ActionResult<Flight> CreateFlight(Flight flight)
+    public async Task <ActionResult<Flight>> CreateFlight(Flight flight)
     {
-        return Ok(_flightService.Createflight(flight));
+        var createdFlight = await _flightService.Createflight(flight);
+
+        return new ObjectResult(createdFlight) { StatusCode = 201 }; //05:36
+     
     }
 
     [HttpPut]
