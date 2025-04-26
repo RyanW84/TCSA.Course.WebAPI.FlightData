@@ -34,16 +34,16 @@ public class FlightsController(IFlightService flightService) : ControllerBase
     [HttpPost]
     public async Task <ActionResult<Flight>> CreateFlight(Flight flight)
     {
-        var createdFlight = await _flightService.Createflight(flight);
+        var createdFlight = await _flightService.CreateFlight(flight);
 
         return new ObjectResult(createdFlight) { StatusCode = 201 }; //05:36
      
     }
 
-    [HttpPut]
-    public ActionResult<Flight> UpdateFlight(Flight flight)
+    [HttpPut("{id}")]
+    public async Task<ActionResult<Flight>> UpdateFlight(int id, Flight updatedFlight)
     {
-        var result = _flightService.GetFlightById(flight.Id);
+        var result = await _flightService.UpdateFlight(id, updatedFlight);
 
         if (result == null)
         {
@@ -54,15 +54,15 @@ public class FlightsController(IFlightService flightService) : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public ActionResult<Flight> DeleteFlight(int id)
+    public async Task<ActionResult<string>>DeleteFlight(int id)
     {
-        var result = _flightService.GetFlightById(id);
+        var result = await _flightService.DeleteFlight(id);
 
         if (result == null)
         {
             return NotFound();
         }
 
-        return Ok(result);
+        return new ObjectResult(result) {StatusCode = 204 };
     }
 }

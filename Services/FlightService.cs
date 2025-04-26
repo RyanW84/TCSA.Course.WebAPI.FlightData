@@ -1,4 +1,7 @@
-﻿using TCSA.WebAPI.FlightData.Data;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore;
+
+using TCSA.WebAPI.FlightData.Data;
 using TCSA.WebAPI.FlightData.Models;
 
 namespace TCSA.WebAPI.FlightData.Services;
@@ -11,7 +14,8 @@ public class FlightService : IFlightService
     {
         this._dbContext = context;
     }
-    public async Task<Flight> Createflight(Flight flight)
+
+    public async Task<Flight> CreateFlight(Flight flight)
     {
         var savedFlight = await _dbContext.Flights.AddAsync(flight);
         await _dbContext.SaveChangesAsync();
@@ -24,7 +28,7 @@ public class FlightService : IFlightService
 
         if (savedFlight == null)
         {
-            return null;
+            return "Flight not found."; // Avoid null return to fix CS8603
         }
 
         _dbContext.Flights.Remove(savedFlight);
@@ -33,22 +37,20 @@ public class FlightService : IFlightService
 
         return $"Successfully deleted flight with id: {id}";
     }
-    public async List<List<Flight>> GetAllFlights()
+
+    public async Task<List<Flight>> GetAllFlights()
     {
-        return await _dbContext.Flights.FindAsync();
+        return await _dbContext.Flights.ToListAsync();
     }
+
     public async Task<Flight?> GetFlightById(int id)
     {
         var result = await _dbContext.Flights.FindAsync(id);
 
-        if (result is null)
-        {
-            return null;
-        }
-        return result;
+        return result; 
     }
-    
-    public async Task<Flight?> Updateflight(int id, Flight updatedFlight)
+
+    public async Task<Flight?> UpdateFlight(int id, Flight updatedFlight)
     {
         Flight? savedFlight = await _dbContext.Flights.FindAsync(id);
 
@@ -57,7 +59,6 @@ public class FlightService : IFlightService
             return null;
         }
 
-        savedFlight.Id = updatedFlight.Id;
         savedFlight.FlightNumber = updatedFlight.FlightNumber;
         savedFlight.AirlineName = updatedFlight.AirlineName;
         savedFlight.DepartureAirportCode = updatedFlight.DepartureAirportCode;
@@ -69,5 +70,7 @@ public class FlightService : IFlightService
         await _dbContext.SaveChangesAsync();
 
         return savedFlight;
+
     }
+
 }
