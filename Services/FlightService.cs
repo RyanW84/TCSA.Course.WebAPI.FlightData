@@ -5,6 +5,7 @@ using TCSA.WebAPI.FlightData.Data;
 using TCSA.WebAPI.FlightData.Models;
 using TCSA.WebAPI.FlightData.Dtos;
 using AutoMapper;
+using System.Net;
 
 namespace TCSA.WebAPI.FlightData.Services;
 
@@ -19,49 +20,89 @@ public class FlightService : IFlightService
         this._mapper = mapper; 
     }
 
-    public async Task<Flight> CreateFlight(FlightApiRequestDto flight)
+    public async Task<ApiResponseDto<Flight>> CreateFlight(FlightApiRequestDto flight)
     {
        Flight newFlight= _mapper.Map<Flight>(flight); // Use Mapper to map DTO to Flight entity
         var savedFlight = await _dbContext.Flights.AddAsync(newFlight);
         await _dbContext.SaveChangesAsync();
-        return savedFlight.Entity;
+        return new ApiResponseDto<Flight>
+        {
+            Data = savedFlight.Entity,
+            ResponseCode = HttpStatusCode.Created,
+        };
     }
 
-    public async Task<string?> DeleteFlight(int id)
+    public async Task<ApiResponseDto<string?>> DeleteFlight(int id)
     {
         Flight? savedFlight = await _dbContext.Flights.FindAsync(id);
 
         if (savedFlight == null)
         {
-            return "Flight not found."; // Avoid null return to fix CS8603
+            return new ApiResponseDto<string?>()
+            {
+                RequestFailed = true,
+                Data = null,
+                ResponseCode = HttpStatusCode.NotFound,
+                ErrorMessage = $"Resource with ID: {id} was not found",
+            };
         }
-
         _dbContext.Flights.Remove(savedFlight);
 
         await _dbContext.SaveChangesAsync();
 
-        return $"Successfully deleted flight with id: {id}";
+        return new ApiResponseDto<string?>()
+        {
+            Data = null,
+            ResponseCode = HttpStatusCode.NoContent,
+        };
     }
 
-    public async Task<List<Flight>> GetAllFlights()
+    public async Task<ApiResponseDto<List<Flight>>> GetAllFlights()
     {
-        return await _dbContext.Flights.ToListAsync();
+
+        var flights = await _dbContext.Flights.ToListAsync();
+        return new ApiResponseDto<List<Flight>>
+        {
+            Data = flights,
+            ResponseCode = HttpStatusCode.OK
+        };
     }
 
-    public async Task<Flight?> GetFlightById(int id)
+    public async Task<ApiResponseDto<Flight?>> GetFlightById(int id)
     {
         var result = await _dbContext.Flights.FindAsync(id);
 
-        return result;
+       if (result is null)
+        {
+            return new ApiResponseDto<Flight?>()
+            {
+                RequestFailed = true,
+                Data = null,
+                ResponseCode = HttpStatusCode.NotFound,
+                ErrorMessage = $"Resource with ID: {id} was not found",
+            };
+        }
+
+       return new ApiResponseDto<Flight?>()
+       {
+           Data = result,
+           ResponseCode = HttpStatusCode.OK,
+       };
     }
 
-    public async Task<Flight?> UpdateFlight(int id, FlightApiRequestDto updatedFlight)
+    public async Task<ApiResponseDto<Flight?>> UpdateFlight(int id, FlightApiRequestDto updatedFlight)
     {
         Flight? savedFlight = await _dbContext.Flights.FindAsync(id);
 
         if (savedFlight is null)
         {
-            return null;
+            return new ApiResponseDto<Flight?>()
+            {
+                RequestFailed = true,
+                Data = null,
+                ResponseCode = HttpStatusCode.NotFound,
+                ErrorMessage = $"Resource with ID: {id} was not found",
+            };
         }
 
         savedFlight = _mapper.Map(updatedFlight, savedFlight); // Use Mapper to map DTO to Flight entity
@@ -69,8 +110,11 @@ public class FlightService : IFlightService
 
         await _dbContext.SaveChangesAsync();
 
-        return savedFlight;
-
+        return new ApiResponseDto<Flight?>()
+        {
+            Data = savedFlight,
+            ResponseCode = HttpStatusCode.OK,
+        };
     }
 
     public Task<Flight?> UpdateFlight(int id, Flight updatedFlight)

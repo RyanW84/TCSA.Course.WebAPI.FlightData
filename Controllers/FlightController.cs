@@ -1,20 +1,20 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+
+using TCSA.WebAPI.FlightData.Dtos;
 using TCSA.WebAPI.FlightData.Models;
 using TCSA.WebAPI.FlightData.Services;
-using TCSA.WebAPI.FlightData.Dtos;
-using AutoMapper;
 
 namespace TCSA.WebAPI.FlightData.Controllers;
 [ApiController]
 [Route("api/[controller]")]
-//Example: http:localhost:5609/api/flights
-public class FlightsController(IFlightService flightService) : ControllerBase
+//Example: http:localhost:5609/api/flights 
+public class FlightController(IFlightService flightService) : ControllerBase
 {
     private readonly IFlightService _flightService = flightService;
-  
+
 
     [HttpGet]
-    public async Task<ActionResult<List<Flight>>> GetAllFlights()
+    public async Task<ActionResult<ApiResponseDto<List<Flight>>>> GetAllFlights()
     {
         var flights = await _flightService.GetAllFlights();
 
@@ -22,7 +22,7 @@ public class FlightsController(IFlightService flightService) : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<Flight>> GetFlightById(int id)
+    public async Task<ActionResult<ApiResponseDto<Flight>>> GetFlightById(int id)
     {
         var result = await _flightService.GetFlightById(id);
 
@@ -35,17 +35,27 @@ public class FlightsController(IFlightService flightService) : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<Flight>> CreateFlight(FlightApiRequestDto flight)
+    public async Task<ActionResult<ApiResponseDto<Flight>>> CreateFlight(FlightApiRequestDto flight)
     {
-    
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
         var createdFlight = await _flightService.CreateFlight(flight);
 
         return new ObjectResult(createdFlight) { StatusCode = 201 };
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<Flight>> UpdateFlight(int id, FlightApiRequestDto updatedFlight)
+    public async Task<ActionResult<ApiResponseDto<Flight>>> UpdateFlight(int id, FlightApiRequestDto updatedFlight)
     {
+
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
         var result = await _flightService.UpdateFlight(id, updatedFlight);
 
         if (result == null)
@@ -57,7 +67,7 @@ public class FlightsController(IFlightService flightService) : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<ActionResult<string>>DeleteFlight(int id)
+    public async Task<ActionResult<ApiResponseDto<string>>> DeleteFlight(int id)
     {
         var result = await _flightService.DeleteFlight(id);
 
@@ -66,6 +76,6 @@ public class FlightsController(IFlightService flightService) : ControllerBase
             return NotFound();
         }
 
-        return new ObjectResult(result) {StatusCode = 204 };
+        return NoContent();
     }
 }
