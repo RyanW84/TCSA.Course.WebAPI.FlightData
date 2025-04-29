@@ -3,21 +3,26 @@ using Microsoft.EntityFrameworkCore;
 
 using TCSA.WebAPI.FlightData.Data;
 using TCSA.WebAPI.FlightData.Models;
+using TCSA.WebAPI.FlightData.Dtos;
+using AutoMapper;
 
 namespace TCSA.WebAPI.FlightData.Services;
 
 public class FlightService : IFlightService
 {
     private readonly FlightsDbContext _dbContext;
+    private readonly IMapper _mapper;
 
-    public FlightService(FlightsDbContext context)
+    public FlightService(FlightsDbContext context, IMapper mapper) 
     {
         this._dbContext = context;
+        this._mapper = mapper; 
     }
 
-    public async Task<Flight> CreateFlight(Flight flight)
+    public async Task<Flight> CreateFlight(FlightApiRequestDto flight)
     {
-        var savedFlight = await _dbContext.Flights.AddAsync(flight);
+       Flight newFlight= _mapper.Map<Flight>(flight); // Use Mapper to map DTO to Flight entity
+        var savedFlight = await _dbContext.Flights.AddAsync(newFlight);
         await _dbContext.SaveChangesAsync();
         return savedFlight.Entity;
     }
@@ -47,10 +52,10 @@ public class FlightService : IFlightService
     {
         var result = await _dbContext.Flights.FindAsync(id);
 
-        return result; 
+        return result;
     }
 
-    public async Task<Flight?> UpdateFlight(int id, Flight updatedFlight)
+    public async Task<Flight?> UpdateFlight(int id, FlightApiRequestDto updatedFlight)
     {
         Flight? savedFlight = await _dbContext.Flights.FindAsync(id);
 
@@ -59,13 +64,8 @@ public class FlightService : IFlightService
             return null;
         }
 
-        savedFlight.FlightNumber = updatedFlight.FlightNumber;
-        savedFlight.AirlineName = updatedFlight.AirlineName;
-        savedFlight.DepartureAirportCode = updatedFlight.DepartureAirportCode;
-        savedFlight.ArrivalAirportCode = updatedFlight.ArrivalAirportCode;
-        savedFlight.DepartureDateTime = updatedFlight.DepartureDateTime;
-        savedFlight.ArrivalDateTime = updatedFlight.ArrivalDateTime;
-        savedFlight.PassengerCapacity = updatedFlight.PassengerCapacity;
+        savedFlight = _mapper.Map(updatedFlight, savedFlight); // Use Mapper to map DTO to Flight entity
+        savedFlight.Id = id; // Ensure the ID is set correctly
 
         await _dbContext.SaveChangesAsync();
 
@@ -73,4 +73,8 @@ public class FlightService : IFlightService
 
     }
 
+    public Task<Flight?> UpdateFlight(int id, Flight updatedFlight)
+    {
+        throw new NotImplementedException();
+    }
 }

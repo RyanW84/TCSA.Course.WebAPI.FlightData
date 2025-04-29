@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using TCSA.WebAPI.FlightData.Models;
 using TCSA.WebAPI.FlightData.Services;
+using TCSA.WebAPI.FlightData.Dtos;
+using AutoMapper;
 
 namespace TCSA.WebAPI.FlightData.Controllers;
 [ApiController]
@@ -9,6 +11,7 @@ namespace TCSA.WebAPI.FlightData.Controllers;
 public class FlightsController(IFlightService flightService) : ControllerBase
 {
     private readonly IFlightService _flightService = flightService;
+  
 
     [HttpGet]
     public async Task<ActionResult<List<Flight>>> GetAllFlights()
@@ -32,16 +35,16 @@ public class FlightsController(IFlightService flightService) : ControllerBase
     }
 
     [HttpPost]
-    public async Task <ActionResult<Flight>> CreateFlight(Flight flight)
+    public async Task<ActionResult<Flight>> CreateFlight(FlightApiRequestDto flight)
     {
+    
         var createdFlight = await _flightService.CreateFlight(flight);
 
-        return new ObjectResult(createdFlight) { StatusCode = 201 }; //05:36
-     
+        return new ObjectResult(createdFlight) { StatusCode = 201 };
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<Flight>> UpdateFlight(int id, Flight updatedFlight)
+    public async Task<ActionResult<Flight>> UpdateFlight(int id, FlightApiRequestDto updatedFlight)
     {
         var result = await _flightService.UpdateFlight(id, updatedFlight);
 
