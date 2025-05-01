@@ -4,6 +4,8 @@ namespace TCSA.WebAPI.FlightData.Dtos;
 
 public class FlightOptions
     {
+
+    // Filter options
     [FromQuery(Name = "airline_name")]
     public string AirlineName { get; set; } = string.Empty;
     [FromQuery(Name = "departure_airport_code")]
@@ -15,11 +17,19 @@ public class FlightOptions
     [FromQuery(Name = "arrival_date_time")]
     public DateTime? ArrivalDateTime { get; set; }
 
+    // Sorting options
     [FromQuery(Name = "sort_by")]
     public string SortBy { get; set; } = "id";
     [FromQuery(Name = "sort_order")]
-    public string SortOrder { get; set; } = "ASC";
+    public string SortOrder { get; set; } = "ASC"; // Asc or Desc
 
+    // Search options
     [FromQuery(Name = "search")]
-    public string Search { get; set; } = string.Empty; // 00:34
+    public string Search { get; set; } = string.Empty;
+
+    // Pagination options
+    [FromQuery(Name = "page_size")]
+    public int PageSize { get; set; } = 10; // Default page size
+    [FromQuery(Name = "page_number")]
+    public int PageNumber { get; set; } = 1; // Default page number
     }

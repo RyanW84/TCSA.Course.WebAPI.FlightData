@@ -61,6 +61,7 @@ public class FlightService: IFlightService
     public async Task<ApiResponseDto<List<Flight>>> GetAllFlights(FlightOptions flightOptions)
         {
         var query = _dbContext.Flights.AsQueryable();
+        var totalFlights = await query.CountAsync();
         // allows for? expandable filtering and the queries are stackable
 
         List<Flight>? flights;
@@ -153,20 +154,30 @@ public class FlightService: IFlightService
             || f.ArrivalDateTime.ToString("yyyy-MM-ddTHH:mm:ss").ToLower().Contains(c)
             || f.PassengerCapacity.ToString().ToLower().Contains(c)
             )).ToList();
+            flights = (List<Flight>)data.Skip((flightOptions.PageNumber - 1) * flightOptions.PageSize)
+            .Take(flightOptions.PageSize).ToList();
 
             }
         else
             {
-            flights = await query.ToListAsync();
+            query = query.Skip((flightOptions.PageNumber - 1) * flightOptions.PageSize)
+            .Take(flightOptions.PageSize); //pagination
+
+            flights = await query.ToListAsync(); // Execute the query and get the results
             }
 
-
-        flights = await query.ToListAsync(); // Execute the query and get the results
+        bool hasPrevious = flightOptions.PageNumber > 1;
+        bool hasNext = (flightOptions.PageNumber * flightOptions.PageSize) < totalFlights;
 
         return new ApiResponseDto<List<Flight>>
             {
             Data = flights,
-            ResponseCode = HttpStatusCode.OK
+            ResponseCode = HttpStatusCode.OK,
+            TotalCount = totalFlights,
+            CurrentPage = flightOptions.PageNumber,
+            PageSize = flightOptions.PageSize,
+            HasPreviousPage = hasPrevious,
+            HasNextPage = hasNext,
             };
         }
 
