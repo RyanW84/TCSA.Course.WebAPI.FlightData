@@ -2,7 +2,7 @@
 
 namespace TCSA.WebAPI.FlightData.Dtos;
 
-public class FlightFilterOptions
+public class FlightOptions
     {
     [FromQuery(Name = "airline_name")]
     public string AirlineName { get; set; } = string.Empty;
@@ -19,4 +19,7 @@ public class FlightFilterOptions
     public string SortBy { get; set; } = "id";
     [FromQuery(Name = "sort_order")]
     public string SortOrder { get; set; } = "ASC";
+
+    [FromQuery(Name = "search")]
+    public string Search { get; set; } = string.Empty; // 00:34
     }

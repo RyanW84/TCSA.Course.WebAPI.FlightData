@@ -58,7 +58,7 @@ public class FlightService: IFlightService
             };
         }
 
-    public async Task<ApiResponseDto<List<Flight>>> GetAllFlights(FlightFilterOptions filterOptions)
+    public async Task<ApiResponseDto<List<Flight>>> GetAllFlights(FlightOptions filterOptions)
         {
         var query = _dbContext.Flights.AsQueryable();
         // allows for expandable filtering and the queries are stackable

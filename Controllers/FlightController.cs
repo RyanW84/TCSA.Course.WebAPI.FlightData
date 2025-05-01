@@ -14,7 +14,7 @@ public class FlightController(IFlightService flightService): ControllerBase
 
 
     [HttpGet]
-    public async Task<ActionResult<ApiResponseDto<List<Flight>>>> GetAllFlights(FlightFilterOptions filterOptions)
+    public async Task<ActionResult<ApiResponseDto<List<Flight>>>> GetAllFlights(FlightOptions filterOptions)
         {
         var flights = await _flightService.GetAllFlights(filterOptions);
 
