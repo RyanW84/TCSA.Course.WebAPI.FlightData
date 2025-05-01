@@ -60,7 +60,7 @@ public class FlightService: IFlightService
 
     public async Task<ApiResponseDto<List<Flight>>> GetAllFlights(FlightOptions flightOptions)
         {
-        var query = _dbContext.Flights.AsQueryable();
+        var query = _dbContext.Flights.Include(f => f.Airline).AsQueryable();
         var totalFlights = await query.CountAsync();
         // allows for? expandable filtering and the queries are stackable
 
@@ -68,7 +68,7 @@ public class FlightService: IFlightService
 
         if(!string.IsNullOrWhiteSpace(flightOptions.AirlineName))
             {
-            query = query.Where(f => f.AirlineName.Contains(flightOptions.AirlineName)); // Filter by AirlineName
+            query = query.Where(f => f.Airline.Name.Contains(flightOptions.AirlineName)); // Filter by AirlineName
             }
 
         if(!string.IsNullOrEmpty(flightOptions.DepartureAirportCode))
@@ -96,9 +96,9 @@ public class FlightService: IFlightService
                 {
                 case "airline_name":
                     query = flightOptions.SortOrder == "ASC" ?
-                    query.OrderByDescending(f => f.AirlineName) :
-                    query.OrderBy(f => f.AirlineName);
-                    query.OrderByDescending(f => f.AirlineName);
+                    query.OrderByDescending(f => f.Airline.Name) :
+                    query.OrderBy(f => f.Airline.Name);
+                    query.OrderByDescending(f => f.Airline.Name);
                     break;
                 case "flight_number":
                     query = flightOptions.SortOrder == "ASC" ?
@@ -145,9 +145,9 @@ public class FlightService: IFlightService
 
             var data = await query.ToListAsync();
 
-            flights = data.Where(f => searchChars.All(c => f.AirlineName.ToLower().Contains(c)
+            flights = data.Where(f => searchChars.All(c => f.Airline.Name.ToLower().Contains(c)
             || f.FlightNumber.ToLower().Contains(c)
-            || f.AirlineName.ToLower().Contains(c)
+            || f.Airline.Name.ToLower().Contains(c)
             || f.DepartureAirportCode.ToLower().Contains(c)
             || f.ArrivalAirportCode.ToLower().Contains(c)
             || f.DepartureDateTime.ToString("yyyy-MM-ddTHH:mm:ss").ToLower().Contains(c)
@@ -183,7 +183,7 @@ public class FlightService: IFlightService
 
     public async Task<ApiResponseDto<Flight?>> GetFlightById(int id)
         {
-        var result = await _dbContext.Flights.FindAsync(id);
+        var result = await _dbContext.Flights.Include(f => f.Airline).FirstOrDefaultAsync(f => f.Id == id); // Include the Airline navigation property
 
         if(result is null)
             {
