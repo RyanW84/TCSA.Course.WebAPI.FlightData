@@ -14,16 +14,17 @@ public class FlightController(IFlightService flightService): ControllerBase
 
 
     [HttpGet]
-    public async Task<ActionResult<ApiResponseDto<List<Flight>>>> GetAllFlights(FlightOptions filterOptions)
+    public async Task<ActionResult<ApiResponseDto<List<Flight>>>> GetAllFlights(FlightOptions flightOptions)
         {
-        var flights = await _flightService.GetAllFlights(filterOptions);
+        var flights = await _flightService.GetAllFlights(flightOptions);
 
-        return Ok(await _flightService.GetAllFlights(filterOptions));
+        return Ok(await _flightService.GetAllFlights(flightOptions));
         }
 
     [HttpGet("{id}")]
     public async Task<ActionResult<ApiResponseDto<Flight>>> GetFlightById(int id)
         {
+
         var result = await _flightService.GetFlightById(id);
 
         if(result == null)
@@ -48,7 +49,7 @@ public class FlightController(IFlightService flightService): ControllerBase
         }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<ApiResponseDto<Flight>>> UpdateFlight(int id , FlightApiRequestDto updatedFlight)
+    public async Task<ActionResult<ApiResponseDto<Flight>>> UpdateFlight(int id,FlightApiRequestDto updatedFlight)
         {
 
         if(!ModelState.IsValid)
@@ -56,7 +57,7 @@ public class FlightController(IFlightService flightService): ControllerBase
             return BadRequest(ModelState);
             }
 
-        var result = await _flightService.UpdateFlight(id , updatedFlight);
+        var result = await _flightService.UpdateFlight(id,updatedFlight);
 
         if(result == null)
             {
