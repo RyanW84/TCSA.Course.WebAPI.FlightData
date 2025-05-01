@@ -15,7 +15,7 @@ public class FlightService: IFlightService
     private readonly FlightsDbContext _dbContext;
     private readonly IMapper _mapper;
 
-    public FlightService(FlightsDbContext context , IMapper mapper)
+    public FlightService(FlightsDbContext context,IMapper mapper)
         {
         this._dbContext = context;
         this._mapper = mapper;
@@ -28,8 +28,8 @@ public class FlightService: IFlightService
         await _dbContext.SaveChangesAsync();
         return new ApiResponseDto<Flight>
             {
-            Data = savedFlight.Entity ,
-            ResponseCode = HttpStatusCode.Created ,
+            Data = savedFlight.Entity,
+            ResponseCode = HttpStatusCode.Created,
             };
         }
 
@@ -41,10 +41,10 @@ public class FlightService: IFlightService
             {
             return new ApiResponseDto<string?>()
                 {
-                RequestFailed = true ,
-                Data = null ,
-                ResponseCode = HttpStatusCode.NotFound ,
-                ErrorMessage = $"Resource with ID: {id} was not found" ,
+                RequestFailed = true,
+                Data = null,
+                ResponseCode = HttpStatusCode.NotFound,
+                ErrorMessage = $"Resource with ID: {id} was not found",
                 };
             }
         _dbContext.Flights.Remove(savedFlight);
@@ -53,8 +53,8 @@ public class FlightService: IFlightService
 
         return new ApiResponseDto<string?>()
             {
-            Data = null ,
-            ResponseCode = HttpStatusCode.NoContent ,
+            Data = null,
+            ResponseCode = HttpStatusCode.NoContent,
             };
         }
 
@@ -86,12 +86,60 @@ public class FlightService: IFlightService
             {
             query = query.Where(f => f.ArrivalDateTime.Date <= filterOptions.ArrivalDateTime.Value.Date); // Filter by DepartureDateTime
             }
+        if(filterOptions.SortBy == "id" || !string.IsNullOrEmpty(filterOptions.SortBy))
+        // allowing to send other values later on
+            {
+            switch(filterOptions.SortBy)
+                {
+                case "airline_name":
+                    query = filterOptions.SortOrder == "ASC" ?
+                    query.OrderByDescending(f => f.AirlineName) :
+                    query.OrderBy(f => f.AirlineName);
+                    query.OrderByDescending(f => f.AirlineName);
+                    break;
+                case "flight_number":
+                    query = filterOptions.SortOrder == "ASC" ?
+                    query.OrderByDescending(f => f.FlightNumber) :
+                    query.OrderBy(f => f.FlightNumber);
+                    break;
+                case "departure_airport_code":
+                    query = filterOptions.SortOrder.ToUpper() == "ASC" ?
+                    query.OrderBy(f => f.DepartureAirportCode) :
+                    query.OrderByDescending(f => f.DepartureAirportCode);
+                    break;
+                case "arrival_airport_code":
+                    query = filterOptions.SortOrder.ToUpper() == "ASC" ?
+                    query.OrderBy(f => f.ArrivalAirportCode) :
+                    query.OrderByDescending(f => f.ArrivalAirportCode);
+                    break;
+                case "departure_date_time":
+                    query = filterOptions.SortOrder.ToUpper() == "ASC" ?
+                    query.OrderBy(f => f.DepartureDateTime) :
+                    query.OrderByDescending(f => f.DepartureDateTime);
+                    break;
+                case "arrival_date_time":
+                    query = filterOptions.SortOrder.ToUpper() == "ASC" ?
+                    query.OrderBy(f => f.ArrivalDateTime) :
+                    query.OrderByDescending(f => f.ArrivalDateTime);
+                    break;
+                case "passenger_count":
+                    query = filterOptions.SortOrder == "ASC" ?
+                    query.OrderBy(f => f.PassengerCapacity) :
+                    query.OrderByDescending(f => f.PassengerCapacity);
+                    break;
+                default:
+                    query = filterOptions.SortOrder == "ASC" ?
+                    query.OrderBy(f => f.Id) :
+                    query.OrderByDescending(f => f.Id);
+                    break;
+                }
+            }
 
         var flights = await query.ToListAsync(); // Execute the query and get the results
 
         return new ApiResponseDto<List<Flight>>
             {
-            Data = flights ,
+            Data = flights,
             ResponseCode = HttpStatusCode.OK
             };
         }
@@ -104,21 +152,21 @@ public class FlightService: IFlightService
             {
             return new ApiResponseDto<Flight?>()
                 {
-                RequestFailed = true ,
-                Data = null ,
-                ResponseCode = HttpStatusCode.NotFound ,
-                ErrorMessage = $"Resource with ID: {id} was not found" ,
+                RequestFailed = true,
+                Data = null,
+                ResponseCode = HttpStatusCode.NotFound,
+                ErrorMessage = $"Resource with ID: {id} was not found",
                 };
             }
 
         return new ApiResponseDto<Flight?>()
             {
-            Data = result ,
-            ResponseCode = HttpStatusCode.OK ,
+            Data = result,
+            ResponseCode = HttpStatusCode.OK,
             };
         }
 
-    public async Task<ApiResponseDto<Flight?>> UpdateFlight(int id , FlightApiRequestDto updatedFlight)
+    public async Task<ApiResponseDto<Flight?>> UpdateFlight(int id,FlightApiRequestDto updatedFlight)
         {
         Flight? savedFlight = await _dbContext.Flights.FindAsync(id);
 
@@ -126,27 +174,22 @@ public class FlightService: IFlightService
             {
             return new ApiResponseDto<Flight?>()
                 {
-                RequestFailed = true ,
-                Data = null ,
-                ResponseCode = HttpStatusCode.NotFound ,
-                ErrorMessage = $"Resource with ID: {id} was not found" ,
+                RequestFailed = true,
+                Data = null,
+                ResponseCode = HttpStatusCode.NotFound,
+                ErrorMessage = $"Resource with ID: {id} was not found",
                 };
             }
 
-        savedFlight = _mapper.Map(updatedFlight , savedFlight); // Use Mapper to map DTO to Flight entity
+        savedFlight = _mapper.Map(updatedFlight,savedFlight); // Use Mapper to map DTO to Flight entity
         savedFlight.Id = id; // Ensure the ID is set correctly
 
         await _dbContext.SaveChangesAsync();
 
         return new ApiResponseDto<Flight?>()
             {
-            Data = savedFlight ,
-            ResponseCode = HttpStatusCode.OK ,
+            Data = savedFlight,
+            ResponseCode = HttpStatusCode.OK,
             };
-        }
-
-    public Task<Flight?> UpdateFlight(int id , Flight updatedFlight)
-        {
-        throw new NotImplementedException();
         }
     }
