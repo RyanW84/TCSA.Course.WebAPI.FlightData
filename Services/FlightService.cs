@@ -1,8 +1,8 @@
-﻿using System.Net;
-
-using AutoMapper;
+﻿using AutoMapper;
 
 using Microsoft.EntityFrameworkCore;
+
+using System.Net;
 
 using TCSA.WebAPI.FlightData.Data;
 using TCSA.WebAPI.FlightData.Dtos;
@@ -10,90 +10,90 @@ using TCSA.WebAPI.FlightData.Models;
 
 namespace TCSA.WebAPI.FlightData.Services;
 
-public class FlightService: IFlightService
-    {
+public class FlightService : IFlightService
+{
     private readonly FlightsDbContext _dbContext;
     private readonly IMapper _mapper;
 
-    public FlightService(FlightsDbContext context,IMapper mapper)
-        {
+    public FlightService(FlightsDbContext context, IMapper mapper)
+    {
         this._dbContext = context;
         this._mapper = mapper;
-        }
+    }
 
     public async Task<ApiResponseDto<Flight>> CreateFlight(FlightApiRequestDto flight)
-        {
+    {
         Flight newFlight = _mapper.Map<Flight>(flight); // Use Mapper to map DTO to Flight entity
         var savedFlight = await _dbContext.Flights.AddAsync(newFlight);
         await _dbContext.SaveChangesAsync();
         return new ApiResponseDto<Flight>
-            {
+        {
             Data = savedFlight.Entity,
             ResponseCode = HttpStatusCode.Created,
-            };
-        }
+        };
+    }
 
     public async Task<ApiResponseDto<string?>> DeleteFlight(int id)
-        {
+    {
         Flight? savedFlight = await _dbContext.Flights.FindAsync(id);
 
-        if(savedFlight == null)
-            {
+        if (savedFlight == null)
+        {
             return new ApiResponseDto<string?>()
-                {
+            {
                 RequestFailed = true,
                 Data = null,
                 ResponseCode = HttpStatusCode.NotFound,
                 ErrorMessage = $"Resource with ID: {id} was not found",
-                };
-            }
+            };
+        }
         _dbContext.Flights.Remove(savedFlight);
 
         await _dbContext.SaveChangesAsync();
 
         return new ApiResponseDto<string?>()
-            {
+        {
             Data = null,
             ResponseCode = HttpStatusCode.NoContent,
-            };
-        }
+        };
+    }
 
     public async Task<ApiResponseDto<List<Flight>>> GetAllFlights(FlightOptions flightOptions)
-        {
+    {
         var query = _dbContext.Flights.Include(f => f.Airline).AsQueryable();
         var totalFlights = await query.CountAsync();
         // allows for? expandable filtering and the queries are stackable
 
         List<Flight>? flights;
 
-        if(!string.IsNullOrWhiteSpace(flightOptions.AirlineName))
-            {
+        if (!string.IsNullOrWhiteSpace(flightOptions.AirlineName))
+        {
             query = query.Where(f => f.Airline.Name.Contains(flightOptions.AirlineName)); // Filter by AirlineName
-            }
+        }
 
-        if(!string.IsNullOrEmpty(flightOptions.DepartureAirportCode))
-            {
+        if (!string.IsNullOrEmpty(flightOptions.DepartureAirportCode))
+        {
             query = query.Where(f => f.DepartureAirportCode.Contains(flightOptions.DepartureAirportCode)); // Filter by DepartureAirportCode
-            }
+        }
 
-        if(!string.IsNullOrEmpty(flightOptions.ArrivalAirportCode))
-            {
+        if (!string.IsNullOrEmpty(flightOptions.ArrivalAirportCode))
+        {
             query = query.Where(f => f.ArrivalAirportCode.Contains(flightOptions.ArrivalAirportCode)); // Filter by ArrivalAirportCode
-            }
+        }
 
-        if(flightOptions.DepartureDateTime.HasValue) // Not a string
-            {
+        if (flightOptions.DepartureDateTime.HasValue) // Not a string
+        {
             query = query.Where(f => f.DepartureDateTime.Date <= flightOptions.DepartureDateTime.Value.Date); // Filter by DepartureDateTime
-            }
-        if(flightOptions.ArrivalDateTime.HasValue) // Not a string
-            {
+        }
+        if (flightOptions.ArrivalDateTime.HasValue) // Not a string
+        {
             query = query.Where(f => f.ArrivalDateTime.Date <= flightOptions.ArrivalDateTime.Value.Date); // Filter by DepartureDateTime
-            }
-        if(flightOptions.SortBy == "id" || !string.IsNullOrEmpty(flightOptions.SortBy))
+        }
+        if (flightOptions.SortBy == "id" || !string.IsNullOrEmpty(flightOptions.SortBy))
         // allowing to send other values later on
+        {
+            switch (flightOptions.SortBy)
             {
-            switch(flightOptions.SortBy)
-                {
                 case "airline_name":
                     query = flightOptions.SortOrder == "ASC" ?
                     query.OrderByDescending(f => f.Airline.Name) :
@@ -135,11 +135,11 @@ public class FlightService: IFlightService
                     query.OrderBy(f => f.Id) :
                     query.OrderByDescending(f => f.Id);
                     break;
-                }
             }
+        }
 
-        if(!string.IsNullOrEmpty(flightOptions.Search))
-            {
+        if (!string.IsNullOrEmpty(flightOptions.Search))
+        {
             string searchLower = flightOptions.Search.ToLower();
             var searchChars = searchLower.ToCharArray();
 
@@ -157,20 +157,20 @@ public class FlightService: IFlightService
             flights = (List<Flight>)data.Skip((flightOptions.PageNumber - 1) * flightOptions.PageSize)
             .Take(flightOptions.PageSize).ToList();
 
-            }
+        }
         else
-            {
+        {
             query = query.Skip((flightOptions.PageNumber - 1) * flightOptions.PageSize)
             .Take(flightOptions.PageSize); //pagination
 
             flights = await query.ToListAsync(); // Execute the query and get the results
-            }
+        }
 
         bool hasPrevious = flightOptions.PageNumber > 1;
         bool hasNext = (flightOptions.PageNumber * flightOptions.PageSize) < totalFlights;
 
         return new ApiResponseDto<List<Flight>>
-            {
+        {
             Data = flights,
             ResponseCode = HttpStatusCode.OK,
             TotalCount = totalFlights,
@@ -178,55 +178,55 @@ public class FlightService: IFlightService
             PageSize = flightOptions.PageSize,
             HasPreviousPage = hasPrevious,
             HasNextPage = hasNext,
-            };
-        }
+        };
+    }
 
     public async Task<ApiResponseDto<Flight?>> GetFlightById(int id)
-        {
+    {
         var result = await _dbContext.Flights.Include(f => f.Airline).FirstOrDefaultAsync(f => f.Id == id); // Include the Airline navigation property
 
-        if(result is null)
-            {
+        if (result is null)
+        {
             return new ApiResponseDto<Flight?>()
-                {
+            {
                 RequestFailed = true,
                 Data = null,
                 ResponseCode = HttpStatusCode.NotFound,
                 ErrorMessage = $"Resource with ID: {id} was not found",
-                };
-            }
-
-        return new ApiResponseDto<Flight?>()
-            {
-            Data = result,
-            ResponseCode = HttpStatusCode.OK,
             };
         }
 
-    public async Task<ApiResponseDto<Flight?>> UpdateFlight(int id,FlightApiRequestDto updatedFlight)
+        return new ApiResponseDto<Flight?>()
         {
+            Data = result,
+            ResponseCode = HttpStatusCode.OK,
+        };
+    }
+
+    public async Task<ApiResponseDto<Flight?>> UpdateFlight(int id, FlightApiRequestDto updatedFlight)
+    {
         Flight? savedFlight = await _dbContext.Flights.FindAsync(id);
 
-        if(savedFlight is null)
-            {
+        if (savedFlight is null)
+        {
             return new ApiResponseDto<Flight?>()
-                {
+            {
                 RequestFailed = true,
                 Data = null,
                 ResponseCode = HttpStatusCode.NotFound,
                 ErrorMessage = $"Resource with ID: {id} was not found",
-                };
-            }
+            };
+        }
 
-        savedFlight = _mapper.Map(updatedFlight,savedFlight); // Use Mapper to map DTO to Flight entity
+        savedFlight = _mapper.Map(updatedFlight, savedFlight); // Use Mapper to map DTO to Flight entity
         savedFlight.Id = id; // Ensure the ID is set correctly
 
         await _dbContext.SaveChangesAsync();
 
         return new ApiResponseDto<Flight?>()
-            {
+        {
             Data = savedFlight,
             ResponseCode = HttpStatusCode.OK,
-            };
-        }
+        };
     }
+}
