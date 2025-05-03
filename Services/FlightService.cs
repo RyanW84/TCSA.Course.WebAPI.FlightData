@@ -59,6 +59,8 @@ public class FlightService : IFlightService
     {
         var query = _dbContext
             .Flights.Include(f => f.Airline)
+            .Include(f => f.DepartureAirports) // Include the DepartureAirports navigation property
+            .Include(f => f.ArrivalAirports) // Include the ArrivalAirports navigation property
             .Include(f => f.Seats) // Include the Seats navigation property
             .AsQueryable();
         // AsQueryable() allows for? expandable filtering and the queries are stackable
@@ -68,20 +70,20 @@ public class FlightService : IFlightService
 
         if (!string.IsNullOrWhiteSpace(flightOptions.AirlineName))
         {
-            query = query.Where(f => f.Airline.Name.Contains(flightOptions.AirlineName)); // Filter by AirlineName
+            query = query.Where(f => f.Airline.Name == flightOptions.AirlineName); // Filter by AirlineName
         }
 
         if (!string.IsNullOrEmpty(flightOptions.DepartureAirportCode))
         {
             query = query.Where(f =>
-                f.DepartureAirportCode.Contains(flightOptions.DepartureAirportCode)
-            ); // Filter by DepartureAirportCode
+                f.DepartureAirports.Any(ap => ap.IataCode == flightOptions.DepartureAirportCode)
+            );
         }
 
         if (!string.IsNullOrEmpty(flightOptions.ArrivalAirportCode))
         {
             query = query.Where(f =>
-                f.ArrivalAirportCode.Contains(flightOptions.ArrivalAirportCode)
+                f.DepartureAirports.Any(ap => ap.IataCode == flightOptions.DepartureAirportCode)
             ); // Filter by ArrivalAirportCode
         }
 
@@ -118,14 +120,14 @@ public class FlightService : IFlightService
                 case "departure_airport_code":
                     query =
                         flightOptions.SortOrder.ToUpper() == "ASC"
-                            ? query.OrderBy(f => f.DepartureAirportCode)
-                            : query.OrderByDescending(f => f.DepartureAirportCode);
+                            ? query.OrderBy(f => f.DepartureAirports.Last().IataCode)
+                            : query.OrderByDescending(f => f.DepartureAirports.Last().IataCode);
                     break;
                 case "arrival_airport_code":
                     query =
                         flightOptions.SortOrder.ToUpper() == "ASC"
-                            ? query.OrderBy(f => f.ArrivalAirportCode)
-                            : query.OrderByDescending(f => f.ArrivalAirportCode);
+                            ? query.OrderBy(f => f.ArrivalAirports.Last().IataCode)
+                            : query.OrderByDescending(f => f.ArrivalAirports.Last().IataCode);
                     break;
                 case "departure_date_time":
                     query =
@@ -166,8 +168,8 @@ public class FlightService : IFlightService
                         f.Airline.Name.ToLower().Contains(c)
                         || f.FlightNumber.ToLower().Contains(c)
                         || f.Airline.Name.ToLower().Contains(c)
-                        || f.DepartureAirportCode.ToLower().Contains(c)
-                        || f.ArrivalAirportCode.ToLower().Contains(c)
+                        || f.DepartureAirports.Last().IataCode.ToLower().Contains(c)
+                        || f.ArrivalAirports.Last().IataCode.ToLower().Contains(c)
                         || f.DepartureDateTime.ToString("yyyy-MM-ddTHH:mm:ss").ToLower().Contains(c)
                         || f.ArrivalDateTime.ToString("yyyy-MM-ddTHH:mm:ss").ToLower().Contains(c)
                         || f.PassengerCapacity.ToString().ToLower().Contains(c)
@@ -208,6 +210,8 @@ public class FlightService : IFlightService
     {
         var result = await _dbContext
             .Flights.Include(f => f.Airline)
+            .Include(f => f.DepartureAirports) // Include the DepartureAirports navigation property
+            .Include(f => f.ArrivalAirports) // Include the ArrivalAirports navigation property
             .Include(f => f.Seats) // Include the Seats navigation property
             .FirstOrDefaultAsync(f => f.Id == id); // Include the Airline navigation property
 

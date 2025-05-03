@@ -10,8 +10,8 @@ public class FlightsDbContext : DbContext
 
     public DbSet<Flight> Flights { get; set; }
     public DbSet<Airline> Airlines { get; set; }
-
     public DbSet<Seat> Seats { get; set; } // Add DbSet for Seat entity
+    public DbSet<Airport> Airports { get; set; } // Add DbSet for Airport entity
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -23,6 +23,16 @@ public class FlightsDbContext : DbContext
             .OnDelete(DeleteBehavior.Cascade); // delete behavior
 
         modelBuilder
+            .Entity<Flight>()
+            .HasMany(f => f.DepartureAirports) // has a collection of DepartureFlights
+            .WithMany(a => a.FlightsDeparting); // has a collection of Flights
+
+        modelBuilder
+            .Entity<Flight>()
+            .HasMany(f => f.ArrivalAirports) // has a collection of ArrivalFlights
+            .WithMany(a => a.FlightsArriving); // has a collection of Flights
+
+        modelBuilder
             .Entity<Seat>()
             .HasOne(s => s.Flight) // has a Flight property
             .WithMany(f => f.Seats) // has a collection of Seats
@@ -32,8 +42,26 @@ public class FlightsDbContext : DbContext
 
     public void SeedData()
     {
-        Airlines.RemoveRange(Airlines); // remove data from Airlines table to ensure consistency for testing
+        Airports.RemoveRange(Airports);
 
+        Airport lax = new Airport { Name = "Los Angeles International Airport", IataCode = "LAX" };
+        Airport jfk = new Airport
+        {
+            Name = "John F. Kennedy International Airport",
+            IataCode = "JFK",
+        };
+        Airport par = new Airport { Name = "Paris Charles de Gaulle Airport", IataCode = "CDG" };
+        Airport tky = new Airport { Name = "Tokyo Haneda Airport", IataCode = "HND" };
+        Airport fll = new Airport
+        {
+            Name = "Fort Lauderdale-Hollywood International Airport",
+            IataCode = "FLL",
+        };
+
+        var airports = new List<Airport> { lax, jfk, par, tky, fll };
+        Airports.AddRange(airports); // add new data to Airports
+
+        Airlines.RemoveRange(Airlines); // remove data from Airlines table to ensure consistency for
         var airlines = new List<Airline>
         {
             new Airline { Name = "American Airlines" },
@@ -41,8 +69,7 @@ public class FlightsDbContext : DbContext
             new Airline { Name = "Delta Airlines" },
         };
 
-        Airlines.AddRange(airlines); // add new data to Airlines table
-
+        Airlines.AddRange(airlines); // add new data to Airlines
         Seats.RemoveRange(Seats); // remove data from Seats table to ensure consistency for
 
         var seatsA = new List<Seat>
@@ -84,37 +111,37 @@ public class FlightsDbContext : DbContext
             {
                 Id = 1,
                 FlightNumber = "AA-101",
-                DepartureAirportCode = "JFK",
-                ArrivalAirportCode = "LAX",
                 DepartureDateTime = DateTime.Now.AddHours(2),
                 ArrivalDateTime = DateTime.Now.AddHours(5),
                 PassengerCapacity = 140,
                 Airline = airlines[0], // set the Airline property
                 Seats = seatsA, // set the Seats property
+                DepartureAirports = [lax],
+                ArrivalAirports = [jfk],
             },
             new Flight
             {
                 Id = 2,
                 FlightNumber = "AB-202",
-                DepartureAirportCode = "ORD",
-                ArrivalAirportCode = "DFW",
                 DepartureDateTime = DateTime.Now.AddHours(3),
                 ArrivalDateTime = DateTime.Now.AddHours(6),
                 PassengerCapacity = 100,
                 Airline = airlines[1],
                 Seats = seatsB, // set the Seats property
+                DepartureAirports = [par],
+                ArrivalAirports = [tky],
             },
             new Flight
             {
                 Id = 3,
                 FlightNumber = "AC-303",
-                DepartureAirportCode = "ORD",
-                ArrivalAirportCode = "DFW",
                 DepartureDateTime = DateTime.Now.AddHours(3),
                 ArrivalDateTime = DateTime.Now.AddHours(6),
                 PassengerCapacity = 120,
                 Airline = airlines[2],
                 Seats = seatsC, // set the Seats property
+                DepartureAirports = [jfk],
+                ArrivalAirports = [fll],
             }
         );
 
